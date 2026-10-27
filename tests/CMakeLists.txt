@@ -75,6 +75,11 @@ add_test(NAME test_xmlcpp COMMAND test_xmlcpp)
 if(RAVEN_BACKEND_VULKAN)
 	raven_add_test(test_render)
 	set_tests_properties(test_render PROPERTIES SKIP_RETURN_CODE 77)
+	if(RAVEN_PLATFORM_SELECTED STREQUAL "wayland")
+		raven_add_test(test_wayland)
+		target_link_libraries(test_wayland PRIVATE Threads::Threads)
+		set_tests_properties(test_wayland PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 30)
+	endif()
 endif()
 
 # Not a test: prints timings for a large widget tree (see the top of benchmark.c).

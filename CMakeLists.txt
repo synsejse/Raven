@@ -32,8 +32,8 @@ option(RAVEN_FETCH_VULKAN_HEADERS "Download the Vulkan headers when no Vulkan SD
 option(RAVEN_REBUILD_SHADERS "Recompile the GLSL shaders (needs glslangValidator or glslc)" OFF)
 option(RAVEN_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 option(RAVEN_MSVC_STATIC_RUNTIME "Visual C++: link the C runtime statically (/MT) instead of using its DLL (/MD)" OFF)
-set(RAVEN_PLATFORM "auto" CACHE STRING "Window system: auto, win32, x11, cocoa or null")
-set_property(CACHE RAVEN_PLATFORM PROPERTY STRINGS auto win32 x11 cocoa null)
+set(RAVEN_PLATFORM "auto" CACHE STRING "Window system: auto, win32, x11, wayland, cocoa or null")
+set_property(CACHE RAVEN_PLATFORM PROPERTY STRINGS auto win32 x11 wayland cocoa null)
 
 if(RAVEN_IS_TOP_LEVEL)
 	# one folder for the programs and the DLL, so that a shared build runs in place
@@ -268,6 +268,18 @@ elseif(RAVEN_PLATFORM_SELECTED STREQUAL "x11")
 	)
 	list(APPEND RAVEN_DEFINITIONS RAVEN_PLATFORM_X11)
 	list(APPEND RAVEN_LIBRARIES ${X11_X11_LIB})
+elseif(RAVEN_PLATFORM_SELECTED STREQUAL "wayland")
+	include(RavenWayland)
+	list(APPEND RAVEN_PLATFORM_SOURCES
+		src/platform/wayland/wayland_platform.c
+		src/platform/wayland/wayland_input.c
+		src/platform/wayland/wayland_clipboard.c
+		src/platform/wayland/wayland_keys.c
+		src/platform/atspi.c
+		${RAVEN_WAYLAND_PROTOCOL_SOURCES}
+	)
+	list(APPEND RAVEN_DEFINITIONS RAVEN_PLATFORM_WAYLAND)
+	list(APPEND RAVEN_LIBRARIES PkgConfig::RAVEN_WAYLAND)
 elseif(RAVEN_PLATFORM_SELECTED STREQUAL "cocoa")
 	if(NOT APPLE)
 		message(FATAL_ERROR "Raven: the cocoa platform is only available on macOS")
@@ -282,7 +294,7 @@ elseif(RAVEN_PLATFORM_SELECTED STREQUAL "cocoa")
 	endif()
 	list(APPEND RAVEN_LIBRARIES ${RAVEN_APPKIT_FRAMEWORK} ${RAVEN_QUARTZCORE_FRAMEWORK} ${RAVEN_METAL_FRAMEWORK})
 elseif(NOT RAVEN_PLATFORM_SELECTED STREQUAL "null")
-	message(FATAL_ERROR "Raven: unknown RAVEN_PLATFORM '${RAVEN_PLATFORM_SELECTED}' (expected auto, win32, x11, cocoa or null)")
+	message(FATAL_ERROR "Raven: unknown RAVEN_PLATFORM '${RAVEN_PLATFORM_SELECTED}' (expected auto, win32, x11, wayland, cocoa or null)")
 endif()
 
 # Vulkan backend: only the headers are needed, the library is loaded at run time
@@ -365,8 +377,13 @@ target_sources(raven PRIVATE
 	${RAVEN_WIDGETS_SOURCES}
 	${RAVEN_XML_SOURCES}
 )
+set(RAVEN_GROUPED_PLATFORM_SOURCES ${RAVEN_PLATFORM_SOURCES})
+if(RAVEN_WAYLAND_PROTOCOL_SOURCES)
+	list(REMOVE_ITEM RAVEN_GROUPED_PLATFORM_SOURCES ${RAVEN_WAYLAND_PROTOCOL_SOURCES})
+	source_group("Generated/Wayland" FILES ${RAVEN_WAYLAND_PROTOCOL_SOURCES})
+endif()
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES
-	${RAVEN_PUBLIC_HEADERS} ${RAVEN_CORE_SOURCES} ${RAVEN_PLATFORM_SOURCES} ${RAVEN_RENDER_SOURCES}
+	${RAVEN_PUBLIC_HEADERS} ${RAVEN_CORE_SOURCES} ${RAVEN_GROUPED_PLATFORM_SOURCES} ${RAVEN_RENDER_SOURCES}
 	${RAVEN_WIDGET_SOURCES} ${RAVEN_WIDGETS_SOURCES} ${RAVEN_XML_SOURCES})
 
 target_include_directories(raven
@@ -398,6 +415,9 @@ endif()
 
 if(RAVEN_PLATFORM_SELECTED STREQUAL "x11")
 	target_include_directories(raven PRIVATE ${X11_INCLUDE_DIR})
+endif()
+if(RAVEN_PLATFORM_SELECTED STREQUAL "wayland")
+	target_include_directories(raven PRIVATE "${RAVEN_WAYLAND_GENERATED_DIR}")
 endif()
 if(RAVEN_BACKEND_VULKAN)
 	target_include_directories(raven PRIVATE ${RAVEN_VULKAN_INCLUDE_DIR})

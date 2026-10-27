@@ -18,6 +18,7 @@ wants to read, debug or extend it.
 │          textures, renderer  │            clipboard        │
 │   ├─ vulkan/                 │   ├─ win32/                 │
 │   └─ null/                   │   ├─ x11/                   │
+│                              │   ├─ wayland/               │
 │                              │   └─ null/                  │
 ├──────────────────────────────┴─────────────────────────────┤
 │ core/   allocator, handles, threads, jobs, files, loop     │
@@ -212,7 +213,8 @@ window keeps producing frames, then goes back to sleep.
 - `vk_surface.c` holds one surface and swapchain per window. The window
   system headers are not included: the create-info structures of the surface
   extensions are declared locally. X11 windows work with either
-  `VK_KHR_xlib_surface` or `VK_KHR_xcb_surface`; `VK_EXT_headless_surface`
+  `VK_KHR_xlib_surface` or `VK_KHR_xcb_surface`; Wayland windows use
+  `VK_KHR_wayland_surface`. `VK_EXT_headless_surface`
   renders without a window (tests).
 - `vk_pipeline.c`: per swapchain format, the render passes and the two
   pipelines (UI, blur); one descriptor set per texture.
@@ -248,6 +250,19 @@ specific to Windows:
 **X11.** Xlib only. Text input goes through an X input context (dead keys,
 compose). The scale comes from the `Xft.dpi` resource. A self-pipe wakes the
 event loop from other threads.
+
+**Wayland.** `wayland-client` and xdg-shell own the windows, while Vulkan
+owns their buffers and presentation. CMake generates protocol bindings from
+the installed `wayland-protocols` XML. Input uses `xkbcommon` keymaps and
+compose sequences; cursors use `wayland-cursor`. Output scales and optional
+fractional-scale/viewporter protocols determine framebuffer dimensions.
+The display read loop uses `prepare_read` / `read_events` / `cancel_read`
+because Vulkan also reads the display on its own event queue. Protocol
+callbacks queue Raven events; only the normal UI pump applies configure
+events and calls the core. `wait_service` services the protocol while
+waiting for rendering, without reentering the application. A self-pipe wakes
+the loop for tasks posted by another thread. See [WAYLAND.md](WAYLAND.md)
+for the build and feature scope.
 
 ## Memory
 
@@ -294,7 +309,8 @@ every spring on its target at once.
   button). On Windows the answer is given to `WM_NCHITTEST`, so the system
   itself moves, resizes and snaps the window. On X11 the core starts the
   move or the resize (`_NET_WM_MOVERESIZE`, or by hand without a window
-  manager) from `rvn_window_press_region`.
+  manager) from `rvn_window_press_region`. Wayland uses that same core hit
+  testing and passes the input event's serial to xdg-shell move/resize.
 - **Popups** are roots of their own, laid out and painted after the content:
   menus, combo lists, the completion list, tooltips. **Dialogs** are popups
   with the `RVN_POPUP_DIALOG` placement: a veil over the window, the content

@@ -6,8 +6,8 @@ A lightweight, multithreaded GUI library in C for editors and tools.
 
 ## Build from source
 
-Raven builds with CMake and a C11 compiler, and has no dependency to install
-besides the X11 development package on Linux. The Vulkan *headers* are
+Raven builds with CMake and a C11 compiler. Linux needs either the X11
+development package or the [Wayland dependencies](docs/WAYLAND.md). The Vulkan *headers* are
 downloaded automatically during the configuration (git and an internet
 connection are needed for that), unless the [Vulkan SDK](https://vulkan.lunarg.com)
 is installed. No Vulkan library is linked.
@@ -80,6 +80,38 @@ The programs are in `build/bin` (`./build/bin/raven_editor`,
 `./build/bin/raven_designer`). At run time the Vulkan driver of the system
 is used (`libvulkan.so.1`, from the `libvulkan1` / `vulkan-loader` package).
 
+#### Nix / NixOS
+
+From the repository root, enter the development shell, build and run an example:
+
+```sh
+nix-shell
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+./build/bin/raven_editor
+```
+
+The shell supplies the C compiler, CMake, Ninja, X11, Wayland, OpenGL and
+Vulkan dependencies, including the Vulkan headers so CMake does not need to
+fetch them. Other examples include `./build/bin/raven_hello` and
+`./build/bin/raven_studio`. Run them inside the shell in a graphical session
+with a working Vulkan driver.
+
+#### Native Wayland
+
+Select the Wayland backend explicitly; `auto` still selects X11 on Linux.
+Inside `nix-shell`, all its dependencies are already available:
+
+```sh
+cmake -S . -B build-wayland -G Ninja -DCMAKE_BUILD_TYPE=Release -DRAVEN_PLATFORM=wayland
+cmake --build build-wayland --parallel
+./build-wayland/bin/raven_glass
+```
+
+This build connects directly to the compositor and does not require X11 or
+XWayland. See [the Wayland guide](docs/WAYLAND.md) for dependencies on other
+distributions, supported features and current limitations.
+
 ### macOS
 
 1. Install the Xcode command line tools (`xcode-select --install`) and CMake
@@ -124,7 +156,7 @@ the [releases](https://github.com/oscar-soirey/Raven/releases).
   interfaces edited visually next to their code, completion of the Raven API,
   translations in a table, build, run and compiler errors at their line in
   the `.xml…` file. See [The IDE](#the-ide).
-- **C11, no dependency.** Raven opens its own native windows (Win32, X11, Cocoa on macOS), loads
+- **C11, native windows.** Raven opens its own windows (Win32, X11, Wayland, Cocoa on macOS), loads
   Vulkan at run time and has its own memory allocator. A stripped shared
   library is about 1.3 MB, two fonts included.
 - **Slate-style layout.** Boxes, grid, overlay, border, canvas, scroll box,
@@ -396,7 +428,8 @@ package and every binding (C++, Python, Rust, Go, C#, Zig, LuaJIT).
 ## Build options and scripts
 
 Requirements: CMake 3.16+, a C11 compiler. Linux also needs the X11
-development package (`libx11-dev`). The Vulkan *headers* are needed to build;
+development package (`libx11-dev`) or the [Wayland dependencies](docs/WAYLAND.md).
+The Vulkan *headers* are needed to build;
 they come from the Vulkan SDK when it is installed and are downloaded
 otherwise. No Vulkan library is linked.
 
@@ -435,7 +468,7 @@ options go after `--`: `generate-cmake.bat -- -DRAVEN_WARNINGS_AS_ERRORS=ON`.
 | `RAVEN_BUILD_TOOLS` | `ON` when top level | `raven_designer` |
 | `RAVEN_BUILD_WEB` | `ON` | web pages (`raven_web.h`, [docs/WEB.md](docs/WEB.md)), compiled into the Raven library itself; it needs nothing more to build |
 | `RAVEN_BACKEND_VULKAN` | `ON` | `OFF` builds without any GPU code (custom backend or headless) |
-| `RAVEN_PLATFORM` | `auto` | `win32`, `x11`, `cocoa` (macOS) or `null` |
+| `RAVEN_PLATFORM` | `auto` | `win32`, `x11`, `wayland`, `cocoa` (macOS) or `null`; `auto` selects X11 on Linux |
 | `RAVEN_WITH_STB_IMAGE` | `ON` | PNG / JPEG / BMP / TGA decoding |
 | `RAVEN_FETCH_VULKAN_HEADERS` | `ON` | download the Khronos headers when no SDK is found |
 | `RAVEN_VULKAN_INCLUDE_DIR` | | folder containing `vulkan/vulkan.h`, to skip the search |
@@ -1120,7 +1153,8 @@ and how to add a widget, a window system or a backend.
 What Raven does not do yet, by area. Contributions are welcome.
 
 **Platforms**
-- Native Wayland (Wayland sessions work through XWayland and the X11 platform).
+- Wayland: external drag and drop, text-input IME, touch and native child
+  viewports; see [the Wayland guide](docs/WAYLAND.md) for the current scope.
 - Embedding the system web view (WebView2, WebKitGTK); `raven_web` drives an
   installed Chromium-based browser instead.
 

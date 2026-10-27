@@ -1105,7 +1105,7 @@ static void rvn_window_lose_pointer(rvn_window_t* window) {
 }
 
 /*
- * Window systems that do not ask for the regions (X11): a press of the left
+ * Window systems that do not ask for the regions (X11, Wayland): a press of the left
  * button on the title bar or on an edge starts moving or resizing the window.
  * Returns R_TRUE when the press was used.
  */
@@ -2048,6 +2048,8 @@ void Rwindow_show(Rid id) {
 void Rwindow_hide(Rid id) {
 	RVN_WINDOW_VOID(window, id);
 	window->visible = R_FALSE;
+	/* In particular, a queued Wayland present must not remap an unmapped surface. */
+	rvn_renderer_sync();
 	g_rvn.platform->window_show(window->platform, R_FALSE);
 }
 

@@ -1051,6 +1051,7 @@ pub struct RFrameStats {
 /// Native handles of a window or of a native viewport.
 ///   Win32 : display = HINSTANCE, window = HWND
 ///   X11   : display = Display*,  window = Window (XID), visual = VisualID
+///   Wayland: display = wl_display*, window = wl_surface*
 ///   Cocoa : display = NSWindow*, window = CAMetalLayer* for Vulkan presentation
 #[repr(C)]
 #[derive(Copy, Clone)]

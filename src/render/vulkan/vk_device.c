@@ -70,6 +70,7 @@ static const char* const g_vk_surface_extensions[] = {
 #else
 	"VK_KHR_xlib_surface",
 	"VK_KHR_xcb_surface",
+	"VK_KHR_wayland_surface",
 #endif
 	"VK_EXT_headless_surface"
 };

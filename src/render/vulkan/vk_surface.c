@@ -37,6 +37,15 @@ typedef struct rvn_vk_xcb_surface_info_t {
 	uint32_t window;
 } rvn_vk_xcb_surface_info_t;
 
+/* VkWaylandSurfaceCreateInfoKHR (no Wayland dependency in the renderer). */
+typedef struct rvn_vk_wayland_surface_info_t {
+	VkStructureType sType;
+	const void* pNext;
+	VkFlags flags;
+	void* display;
+	void* surface;
+} rvn_vk_wayland_surface_info_t;
+
 /* VkMetalSurfaceCreateInfoEXT: declared locally so Metal headers/platform macros stay out of the C renderer. */
 typedef struct rvn_vk_metal_surface_info_t {
 	VkStructureType sType;
@@ -65,6 +74,13 @@ static int rvn_vk_native_surface_create(const RNativeWindow* native, VkSurfaceKH
 		info.sType = (VkStructureType)1000217000; /* VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT */
 		info.layer = (const void*)native->window;
 		result = rvn_vk.CreateMetalSurfaceEXT(g_vk.instance, &info, NULL, out);
+	} else if (native->system == R_WINDOW_SYSTEM_WAYLAND && rvn_vk.CreateWaylandSurfaceKHR) {
+		rvn_vk_wayland_surface_info_t info;
+		memset(&info, 0, sizeof(info));
+		info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
+		info.display = native->display;
+		info.surface = (void*)native->window;
+		result = rvn_vk.CreateWaylandSurfaceKHR(g_vk.instance, &info, NULL, out);
 	} else if (native->system == R_WINDOW_SYSTEM_X11) {
 		if (rvn_vk.CreateXlibSurfaceKHR) {
 			rvn_vk_xlib_surface_info_t info;

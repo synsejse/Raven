@@ -3,11 +3,12 @@
  * Windowing interface implemented once per window system.
  *
  *   platform/x11/     Xlib               (Linux, BSD)
+ *   platform/wayland/ Wayland + xdg-shell (Linux, BSD)
  *   platform/win32/   Win32              (Windows)
  *   platform/cocoa/   Cocoa + Metal      (macOS)
  *   platform/null/    no window at all   (headless runs, tests)
  *
- * To port Raven to another window system (for example Wayland), implement this
+ * To port Raven to another window system, implement this
  * table and return it from rvn_platform_select.
  *
  * Unless noted, sizes and positions are in pixels of the client area and all
@@ -211,6 +212,9 @@ const rvn_platform_t* rvn_platform_select(int headless);
 const rvn_platform_t* rvn_platform_null(void);
 #if defined(RAVEN_PLATFORM_X11)
 const rvn_platform_t* rvn_platform_x11(void);
+#endif
+#if defined(RAVEN_PLATFORM_WAYLAND)
+const rvn_platform_t* rvn_platform_wayland(void);
 #endif
 #if defined(RAVEN_PLATFORM_WIN32)
 const rvn_platform_t* rvn_platform_win32(void);

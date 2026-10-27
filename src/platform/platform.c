@@ -11,6 +11,8 @@ const rvn_platform_t* rvn_platform_select(int headless) {
 	return rvn_platform_win32();
 #elif defined(RAVEN_PLATFORM_X11)
 	return rvn_platform_x11();
+#elif defined(RAVEN_PLATFORM_WAYLAND)
+	return rvn_platform_wayland();
 #elif defined(RAVEN_PLATFORM_COCOA)
 	return rvn_platform_cocoa();
 #else

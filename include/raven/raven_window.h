@@ -2,7 +2,7 @@
  * Raven
  * raven_window.h : OS windows, input enums and events.
  *
- * Raven creates and owns its windows (Win32, X11, Cocoa on macOS). Sizes and positions are in
+ * Raven creates and owns its windows (Win32, X11, Wayland, Cocoa on macOS). Sizes and positions are in
  * logical units; multiply by Rwindow_get_scale to get pixels.
  */
 
@@ -74,6 +74,7 @@ typedef enum RWindowSystem{
  * Native handles of a window or of a native viewport.
  *   Win32 : display = HINSTANCE, window = HWND
  *   X11   : display = Display*,  window = Window (XID), visual = VisualID
+ *   Wayland: display = wl_display*, window = wl_surface*
  *   Cocoa : display = NSWindow*, window = CAMetalLayer* for Vulkan presentation
  */
 typedef struct RNativeWindow {

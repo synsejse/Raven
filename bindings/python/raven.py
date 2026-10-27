@@ -1319,6 +1319,7 @@ class RNativeWindow(ctypes.Structure):
     """Native handles of a window or of a native viewport.
       Win32 : display = HINSTANCE, window = HWND
       X11   : display = Display*,  window = Window (XID), visual = VisualID
+      Wayland: display = wl_display*, window = wl_surface*
       Cocoa : display = NSWindow*, window = CAMetalLayer* for Vulkan presentation"""
     _fields_ = [
         ("system", ctypes.c_int),
