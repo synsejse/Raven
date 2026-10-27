@@ -36,7 +36,8 @@ int rvn_widget_alive(const rvn_widget_t* widget) {
  * ------------------------------------------------------------------------- */
 
 float rvn_control_radius(const rvn_widget_t* widget, float height) {
-	if (rvn_widget_glass(widget)) return height * 0.5f;
+	/* Glass defaults to a capsule, unless the widget or its style gives a radius. */
+	if (rvn_widget_glass(widget) && !rvn_widget_has_metric(widget, R_METRIC_CORNER_RADIUS)) return height * 0.5f;
 	return rvn_widget_metric(widget, R_METRIC_CORNER_RADIUS);
 }
 

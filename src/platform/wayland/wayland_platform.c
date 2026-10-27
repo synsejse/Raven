@@ -310,6 +310,7 @@ static void rvn_wl_window_destroy(rvn_pwindow_t* window) {
 	if (window->shell_surface) xdg_surface_destroy(window->shell_surface);
 	if (window->surface) wl_surface_destroy(window->surface);
 	rvn_free(window->title);
+	rvn_free(window->app_id);
 	rvn_free(window);
 }
 
@@ -388,6 +389,7 @@ static rvn_pwindow_t* rvn_wl_window_create(const rvn_pwindow_desc_t* desc) {
 	window->flags = desc->flags;
 	window->user = desc->user;
 	window->title = rvn_strdup(desc->title ? desc->title : "");
+	window->app_id = rvn_strdup(desc->app_id);
 	window->cursor = R_CURSOR_ARROW;
 	window->surface = wl_compositor_create_surface(g_wl.compositor);
 	window->next = g_wl.windows;
@@ -401,7 +403,7 @@ static rvn_pwindow_t* rvn_wl_window_create(const rvn_pwindow_desc_t* desc) {
 	if (!window->toplevel) goto failed;
 	xdg_toplevel_add_listener(window->toplevel, &toplevel_listener, window);
 	xdg_toplevel_set_title(window->toplevel, desc->title ? desc->title : "");
-	xdg_toplevel_set_app_id(window->toplevel, "org.raven.Raven");
+	xdg_toplevel_set_app_id(window->toplevel, window->app_id);
 	if (desc->flags & R_WINDOW_NO_RESIZE) {
 		xdg_toplevel_set_min_size(window->toplevel, desc->width, desc->height);
 		xdg_toplevel_set_max_size(window->toplevel, desc->width, desc->height);
@@ -465,7 +467,7 @@ static void rvn_wl_show(rvn_pwindow_t* window, int visible) {
 		window->hidden = 0;
 		/* Unmapping resets xdg_toplevel state, including its title and hints. */
 		xdg_toplevel_set_title(window->toplevel, window->title);
-		xdg_toplevel_set_app_id(window->toplevel, "org.raven.Raven");
+		xdg_toplevel_set_app_id(window->toplevel, window->app_id);
 		xdg_toplevel_set_min_size(window->toplevel, window->min_width, window->min_height);
 		if (window->flags & R_WINDOW_NO_RESIZE) {
 			xdg_toplevel_set_min_size(window->toplevel, window->width, window->height);

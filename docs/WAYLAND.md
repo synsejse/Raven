@@ -39,6 +39,23 @@ files stay in the build directory. Installed CMake consumers use the usual
 `find_package(raven REQUIRED)` and `raven::raven` target; pkg-config resolves
 their Wayland dependencies.
 
+## Application identity
+
+Set `RInitDesc.app_id` before `Rinit_ex` to associate every window with the
+application's desktop entry and icon:
+
+```c
+RInitDesc init = { 0 };
+init.app_name = "Editor";
+init.app_id = "org.example.Editor"; /* org.example.Editor.desktop */
+Rinit_ex(&init);
+```
+
+Raven copies the ID during initialization and sends it before the first Wayland
+surface commit. NULL or an empty string keeps the default `org.raven.Raven`.
+Other window systems ignore this setting. See the
+[xdg-shell application ID contract](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/stable/xdg-shell/xdg-shell.xml).
+
 ## Supported
 
 - Native toplevel windows, close requests, titles, resize, minimum sizes,
@@ -78,7 +95,7 @@ their Wayland dependencies.
   requests and whole-window opacity below 1 return unsupported. Restoring
   a minimized window or raising it without user activation is compositor
   policy; xdg-shell provides no portable request for that.
-- One seat is used. App IDs currently use `org.raven.Raven`.
+- One seat is used.
 
 ## Validation
 

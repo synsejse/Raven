@@ -119,6 +119,13 @@ typedef struct RInitDesc {
 	int headless;
 	/** Global UI scale multiplier applied on top of the monitor scale. 0 = 1.0. */
 	float ui_scale;
+	/**
+	 * Wayland application ID for all windows, matching the desktop entry's
+	 * filename without ".desktop" (for example "org.example.Editor").
+	 * Copied during Rinit_ex. NULL or empty selects "org.raven.Raven".
+	 * Ignored by other window systems.
+	 */
+	const char* app_id;
 } RInitDesc;
 
 /** Memory functions of the application, to replace the allocator of Raven. See Rset_allocator. */

@@ -1338,6 +1338,13 @@ namespace Raven
         /// Global UI scale multiplier applied on top of the monitor scale. 0 = 1.0.
         /// </summary>
         public float ui_scale;
+        /// <summary>
+        /// Wayland application ID for all windows, matching the desktop entry's
+        /// filename without ".desktop" (for example "org.example.Editor").
+        /// Copied during Rinit_ex. NULL or empty selects "org.raven.Raven".
+        /// Ignored by other window systems.
+        /// </summary>
+        public IntPtr app_id;
     }
 
     /// <summary>

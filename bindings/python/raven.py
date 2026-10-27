@@ -1276,6 +1276,7 @@ class RInitDesc(ctypes.Structure):
         ("enable_validation", ctypes.c_int),
         ("headless", ctypes.c_int),
         ("ui_scale", ctypes.c_float),
+        ("app_id", ctypes.c_char_p),
     ]
 
 

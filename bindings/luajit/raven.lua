@@ -688,6 +688,7 @@ struct RInitDesc {
 	int enable_validation;
 	int headless;
 	float ui_scale;
+	const char* app_id;
 };
 struct RAllocator {
 	void* alloc;

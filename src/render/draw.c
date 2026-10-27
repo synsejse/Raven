@@ -359,7 +359,8 @@ void rvn_drawlist_transform(rvn_drawlist_t* list, uint32_t first_instance, uint3
 				instance->radii[1] *= s;
 				instance->radii[2] *= s;
 				instance->radii[3] *= s;
-				instance->border_width *= s;
+				/* Effects store elapsed time here, not a geometric width. */
+				if (kind != R_PRIM_SHADER) instance->border_width *= s;
 				break;
 		}
 		clip = rvn_box(instance->clip[0] * sx + tx, instance->clip[1] * sy + ty,

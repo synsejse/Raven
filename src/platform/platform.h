@@ -111,6 +111,7 @@ typedef rvn_pregion_t (*rvn_pregion_handler_t)(void* user, int x, int y);
 
 typedef struct rvn_pwindow_desc_t {
 	const char* title;
+	const char* app_id;
 	/** Client size in logical units: the platform multiplies by its scale. */
 	int width, height;
 	/** Bitmask of RWindowFlags. */

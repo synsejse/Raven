@@ -120,6 +120,7 @@ int Rinit_ex(const RInitDesc* user_desc) {
 	g_rvn.ui_scale = desc.ui_scale > 0.0f ? desc.ui_scale : 1.0f;
 	g_rvn.vsync = !desc.disable_vsync;
 	g_rvn.backend = desc.backend;
+	g_rvn.app_id = rvn_strdup(desc.app_id && desc.app_id[0] ? desc.app_id : "org.raven.Raven");
 	g_rvn.default_font = R_INVALID_ID;
 	rvn_pool_init(&g_rvn.windows, RVN_HANDLE_WINDOW);
 	rvn_pool_init(&g_rvn.widgets, RVN_HANDLE_WIDGET);
@@ -178,6 +179,7 @@ fail_renderer:
 	rvn_jobs_shutdown();
 	g_rvn.platform->shutdown();
 fail_platform:
+	rvn_free(g_rvn.app_id);
 	rvn_mutex_destroy(&g_rvn.task_mutex);
 	rvn_pool_free(&g_rvn.windows);
 	rvn_pool_free(&g_rvn.widgets);
@@ -242,6 +244,7 @@ void Rshutdown(void) {
 	rvn_free(g_rvn.dead_windows);
 	rvn_free(g_rvn.clipboard);
 	rvn_free(g_rvn.xml_base_path);
+	rvn_free(g_rvn.app_id);
 	rvn_mutex_destroy(&g_rvn.task_mutex);
 	rvn_pool_free(&g_rvn.windows);
 	rvn_pool_free(&g_rvn.widgets);

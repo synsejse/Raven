@@ -29,6 +29,7 @@ struct rvn_pwindow_t {
 	struct wp_fractional_scale_v1* fractional;
 	void* user;
 	char* title;
+	char* app_id;
 	uint32_t flags, configure_serial, fractional_scale;
 	int width, height, pending_width, pending_height;
 	int requested_width, requested_height, constrained;

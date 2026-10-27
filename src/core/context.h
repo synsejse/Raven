@@ -101,6 +101,7 @@ typedef struct rvn_context_t {
 	int vsync;
 	RBackend backend;
 	const rvn_platform_t* platform;
+	char* app_id;
 
 	rvn_pool_t windows;
 	rvn_pool_t widgets;

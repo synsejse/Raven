@@ -760,8 +760,9 @@ static void rvn_window_paint_dialog(rvn_window_t* window, RPainter* painter, rvn
 	if (g_rvn.theme.glass) {
 		rvn_paint_surface(painter, root, frame, 26.0f, RVN_SURFACE_POPUP, 0.0f, 0.0f);
 	} else {
-		rvn_paint_shadow(painter, rvn_rect(frame.x, frame.y + 6.0f, frame.w, frame.h), 10.0f, 28.0f, RVN_THEME_COLOR(R_COLOR_SHADOW));
-		rvn_paint_box(painter, frame, 10.0f, RVN_THEME_COLOR(R_COLOR_POPUP), 1.0f, RVN_THEME_COLOR(R_COLOR_POPUP_BORDER));
+		float radius = RVN_THEME_METRIC(R_METRIC_POPUP_RADIUS);
+		rvn_paint_shadow(painter, rvn_rect(frame.x, frame.y + 6.0f, frame.w, frame.h), radius, 28.0f, RVN_THEME_COLOR(R_COLOR_SHADOW));
+		rvn_paint_box(painter, frame, radius, RVN_THEME_COLOR(R_COLOR_POPUP), 1.0f, RVN_THEME_COLOR(R_COLOR_POPUP_BORDER));
 	}
 	rvn_widget_paint(root, painter);
 	painter->opacity = opacity;
@@ -1804,6 +1805,7 @@ Rid Rwindow_create(const char* title, int width, int height, Ruint flags) {
 	}
 
 	desc.title = window->title;
+	desc.app_id = g_rvn.app_id;
 	desc.width = (int)((float)width * g_rvn.ui_scale + 0.5f);
 	desc.height = (int)((float)height * g_rvn.ui_scale + 0.5f);
 	desc.flags = flags;
