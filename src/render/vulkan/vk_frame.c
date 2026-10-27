@@ -17,6 +17,8 @@
 
 /** Smallest instance buffer: 1024 instances. */
 #define RVN_VK_MIN_INSTANCE_BYTES ((VkDeviceSize)1024 * sizeof(RDrawInstance))
+/** Longest wait for a vsynced frame to reach the screen: 50 ms, a few refreshes. */
+#define RVN_VK_PRESENT_WAIT_NS 50000000ull
 
 /* ---------------------------------------------------------------------------
  *  State of the UI pipeline
@@ -283,8 +285,12 @@ void rvn_vk_render_frame(const RDrawData* data, RCapture* capture) {
 	VkClearValue clear;
 	VkSubmitInfo submit;
 	VkPresentInfoKHR present;
+#if defined(VK_KHR_present_id) && defined(VK_KHR_present_wait)
+	VkPresentIdKHR present_id;
+#endif
 	VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	uint32_t image_index = 0, capture_width = 0, capture_height = 0;
+	uint64_t wait_id = 0;
 	int capturing = R_FALSE, glass;
 	VkResult result;
 
@@ -385,6 +391,16 @@ void rvn_vk_render_frame(const RDrawData* data, RCapture* capture) {
 	present.swapchainCount = 1;
 	present.pSwapchains = &surface->swapchain;
 	present.pImageIndices = &image_index;
+#if defined(VK_KHR_present_id) && defined(VK_KHR_present_wait)
+	if (g_vk.present_wait && surface->present_vsync) {
+		wait_id = ++surface->present_id;
+		memset(&present_id, 0, sizeof(present_id));
+		present_id.sType = VK_STRUCTURE_TYPE_PRESENT_ID_KHR;
+		present_id.swapchainCount = 1;
+		present_id.pPresentIds = &wait_id;
+		present.pNext = &present_id;
+	}
+#endif
 
 	rvn_vk_queue_lock();
 	result = rvn_vk.QueueSubmit(g_vk.queue, 1, &submit, frame->fence);
@@ -396,10 +412,24 @@ void rvn_vk_render_frame(const RDrawData* data, RCapture* capture) {
 		} else {
 			rvn_vk_failed(result, "vkQueuePresentKHR");
 		}
+		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) wait_id = 0;
 	} else {
 		rvn_vk_failed(result, "vkQueueSubmit");
+		wait_id = 0;
 	}
 	rvn_vk_queue_unlock();
+
+	/*
+	 * Vertical synchronization: return once the frame is on screen, so that the
+	 * next one is made from the latest input instead of queueing behind this one
+	 * (see rvn_vk_create_device). The UI thread waits for this frame meanwhile
+	 * (RVN_MAX_FRAMES_IN_FLIGHT). A hidden or minimized window may never be
+	 * shown: the timeout then paces it.
+	 */
+	if (wait_id) {
+		result = rvn_vk.WaitForPresentKHR(g_vk.device, surface->swapchain, wait_id, RVN_VK_PRESENT_WAIT_NS);
+		if (result == VK_ERROR_OUT_OF_DATE_KHR) surface->out_of_date = R_TRUE;
+	}
 
 	if (capturing) {
 		if (frame->submitted) {

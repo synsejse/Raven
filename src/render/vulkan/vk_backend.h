@@ -136,6 +136,8 @@ typedef struct rvn_vk_surface_t {
 	/** The swapchain no longer matches the window. */
 	int out_of_date;
 	int present_vsync;   /* vsync of the present mode of the swapchain */
+	/** Id of the last present to this swapchain (VK_KHR_present_id), 0 before the first. */
+	uint64_t present_id;
 	/** The swapchain images can be read back (Rwindow_capture). */
 	int can_capture;
 	/** The window can be seen through: the swapchain is asked to carry alpha. */
@@ -186,6 +188,8 @@ typedef struct rvn_vk_state_t {
 	uint32_t api_version;
 	/** Memory of textures can be exported (external memory fd / win32). */
 	int can_share;
+	/** VK_KHR_present_wait is enabled: a vsynced frame waits until it is on screen. */
+	int present_wait;
 
 	/* vk_pipeline.c */
 	VkShaderModule vertex_shader;

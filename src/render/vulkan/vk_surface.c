@@ -302,6 +302,8 @@ int rvn_vk_swapchain_create(rvn_vk_surface_t* surface, uint32_t width, uint32_t 
 	surface->swapchain = created;
 	surface->extent = extent;
 	surface->present_vsync = g_vk.info.vsync;
+	/* the ids of the presents count per swapchain */
+	surface->present_id = 0;
 
 	image_count = 0;
 	rvn_vk.GetSwapchainImagesKHR(g_vk.device, surface->swapchain, &image_count, NULL);

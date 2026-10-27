@@ -131,6 +131,7 @@ int rvn_vk_load_instance(VkInstance instance) {
 	RVN_VK_ASSIGN(rvn_vk.CreateHeadlessSurfaceEXT, rvn_vk.GetInstanceProcAddr(instance, "vkCreateHeadlessSurfaceEXT"));
 	RVN_VK_ASSIGN(rvn_vk.CreateDebugUtilsMessengerEXT, rvn_vk.GetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
 	RVN_VK_ASSIGN(rvn_vk.DestroyDebugUtilsMessengerEXT, rvn_vk.GetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
+	RVN_VK_ASSIGN(rvn_vk.GetPhysicalDeviceFeatures2, rvn_vk.GetInstanceProcAddr(instance, "vkGetPhysicalDeviceFeatures2"));
 
 	if (missing) {
 		rvn_error(R_ERROR_BACKEND, R_SEVERITY_ERROR,
@@ -151,6 +152,7 @@ int rvn_vk_load_device(VkDevice device) {
 
 	RVN_VK_ASSIGN(rvn_vk.GetMemoryFdKHR, rvn_vk.GetDeviceProcAddr(device, "vkGetMemoryFdKHR"));
 	RVN_VK_ASSIGN(rvn_vk.GetMemoryWin32HandleKHR, rvn_vk.GetDeviceProcAddr(device, "vkGetMemoryWin32HandleKHR"));
+	RVN_VK_ASSIGN(rvn_vk.WaitForPresentKHR, rvn_vk.GetDeviceProcAddr(device, "vkWaitForPresentKHR"));
 
 	if (missing) {
 		rvn_error(R_ERROR_BACKEND, R_SEVERITY_ERROR,

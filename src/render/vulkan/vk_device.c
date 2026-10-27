@@ -290,11 +290,16 @@ static int rvn_vk_create_device(void) {
 	VkDeviceQueueCreateInfo queue;
 	VkDeviceCreateInfo info;
 	VkPhysicalDeviceProperties properties;
+#if defined(VK_KHR_present_id) && defined(VK_KHR_present_wait)
+	VkPhysicalDeviceFeatures2 features;
+	VkPhysicalDevicePresentIdFeaturesKHR present_id;
+	VkPhysicalDevicePresentWaitFeaturesKHR present_wait;
+#endif
 	const char* extensions[RVN_VK_MAX_EXTENSIONS];
 	const char* const* required;
 	uint32_t required_count = 0, extension_count = 0, i;
 	float priority = 1.0f;
-	int share;
+	int share, wait = R_FALSE;
 	VkResult result;
 
 	required = rvn_vk_device_extensions(&required_count);
@@ -313,6 +318,35 @@ static int rvn_vk_create_device(void) {
 		rvn_vk_device_has_extension(g_vk.physical_device, RVN_VK_EXTERNAL_MEMORY_EXTENSION);
 	if (share) extensions[extension_count++] = RVN_VK_EXTERNAL_MEMORY_EXTENSION;
 
+	/*
+	 * optional: present wait. With the vertical synchronization the swapchain
+	 * queues the frames that come faster than the screen (several images on
+	 * Wayland), and each one shows that much later; waiting until a frame is
+	 * on screen before the next one keeps the queue empty.
+	 */
+#if defined(VK_KHR_present_id) && defined(VK_KHR_present_wait)
+	memset(&present_wait, 0, sizeof(present_wait));
+	present_wait.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR;
+	memset(&present_id, 0, sizeof(present_id));
+	present_id.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_ID_FEATURES_KHR;
+	present_id.pNext = &present_wait;
+	memset(&features, 0, sizeof(features));
+	features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+	features.pNext = &present_id;
+	if (properties.apiVersion >= VK_API_VERSION_1_1 && g_vk.api_version >= VK_API_VERSION_1_1 && rvn_vk.GetPhysicalDeviceFeatures2 &&
+		rvn_vk_device_has_extension(g_vk.physical_device, VK_KHR_PRESENT_ID_EXTENSION_NAME) &&
+		rvn_vk_device_has_extension(g_vk.physical_device, VK_KHR_PRESENT_WAIT_EXTENSION_NAME)) {
+		rvn_vk.GetPhysicalDeviceFeatures2(g_vk.physical_device, &features);
+		wait = present_id.presentId && present_wait.presentWait;
+	}
+	if (wait) {
+		extensions[extension_count++] = VK_KHR_PRESENT_ID_EXTENSION_NAME;
+		extensions[extension_count++] = VK_KHR_PRESENT_WAIT_EXTENSION_NAME;
+		/* the queried structures enable what they report */
+		present_wait.pNext = NULL;
+	}
+#endif
+
 	memset(&queue, 0, sizeof(queue));
 	queue.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 	queue.queueFamilyIndex = g_vk.queue_family;
@@ -325,10 +359,14 @@ static int rvn_vk_create_device(void) {
 	info.pQueueCreateInfos = &queue;
 	info.enabledExtensionCount = extension_count;
 	info.ppEnabledExtensionNames = extensions;
+#if defined(VK_KHR_present_id) && defined(VK_KHR_present_wait)
+	if (wait) info.pNext = &present_id;
+#endif
 
 	result = rvn_vk.CreateDevice(g_vk.physical_device, &info, NULL, &g_vk.device);
 	if (rvn_vk_failed(result, "vkCreateDevice")) return R_FALSE;
 	if (!rvn_vk_load_device(g_vk.device)) return R_FALSE;
+	g_vk.present_wait = wait && rvn_vk.WaitForPresentKHR != NULL;
 	rvn_vk.GetDeviceQueue(g_vk.device, g_vk.queue_family, 0, &g_vk.queue);
 	return R_TRUE;
 }

@@ -117,6 +117,8 @@ typedef VkResult (VKAPI_PTR *rvn_vk_create_surface_fn)(VkInstance instance, cons
 	const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface);
 /** vkGetMemoryFdKHR / vkGetMemoryWin32HandleKHR. */
 typedef VkResult (VKAPI_PTR *rvn_vk_get_memory_handle_fn)(VkDevice device, const void* info, void* handle);
+/** vkWaitForPresentKHR, typed here so that older Vulkan headers still build. */
+typedef VkResult (VKAPI_PTR *rvn_vk_wait_for_present_fn)(VkDevice device, VkSwapchainKHR swapchain, uint64_t present_id, uint64_t timeout);
 
 typedef struct rvn_vk_functions_t {
 	PFN_vkGetInstanceProcAddr GetInstanceProcAddr;
@@ -140,6 +142,9 @@ typedef struct rvn_vk_functions_t {
 	PFN_vkDestroyDebugUtilsMessengerEXT DestroyDebugUtilsMessengerEXT;
 	rvn_vk_get_memory_handle_fn GetMemoryFdKHR;
 	rvn_vk_get_memory_handle_fn GetMemoryWin32HandleKHR;
+	/** NULL on a Vulkan 1.0 instance. */
+	PFN_vkGetPhysicalDeviceFeatures2 GetPhysicalDeviceFeatures2;
+	rvn_vk_wait_for_present_fn WaitForPresentKHR;
 } rvn_vk_functions_t;
 
 extern rvn_vk_functions_t rvn_vk;
